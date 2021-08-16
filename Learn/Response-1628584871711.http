@@ -1,0 +1,15 @@
+HTTP/1.1 400 Bad Request
+Server: nginx
+Date: Tue, 10 Aug 2021 08:38:47 GMT
+Content-Type: application/problem+json
+Content-Length: 117
+Connection: close
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-staging-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 0001CcUf_Bajp3obeBVuSnQguI0TEqcPiigV6oGTSpfawAc
+
+{
+  "type": "urn:ietf:params:acme:error:badPublicKey",
+  "detail": "ECDSA curve P-521 not allowed",
+  "status": 400
+}

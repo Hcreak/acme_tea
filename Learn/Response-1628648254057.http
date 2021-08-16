@@ -1,0 +1,26 @@
+HTTP/1.1 201 Created
+Server: nginx
+Date: Wed, 11 Aug 2021 02:13:57 GMT
+Content-Type: application/json
+Content-Length: 285
+Connection: close
+Boulder-Requester: 22965118
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-staging-v02.api.letsencrypt.org/directory>;rel="index", <https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf>;rel="terms-of-service"
+Location: https://acme-staging-v02.api.letsencrypt.org/acme/acct/22965118
+Replay-Nonce: 0002ATjo8s9gx1_Bldf6kCDEgK0ZLScRbzV-hJzi0fhuShk
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "key": {
+    "kty": "EC",
+    "crv": "P-256",
+    "x": "YZmawMxktWWSe78STgzwvztR3yZHRQ2REzOKwD1X1Ro",
+    "y": "EwVJ0l98UtmmcS-v9hxNb4nKl2ngQE3Vk5p9u1LEIeo"
+  },
+  "contact": [],
+  "initialIp": "116.25.45.161",
+  "createdAt": "2021-08-11T02:13:57.823173602Z",
+  "status": "valid"
+}

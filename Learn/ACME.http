@@ -1,0 +1,90 @@
+GET https://acme-v02.api.letsencrypt.org/directory
+
+###
+GET https://api.buypass.com/acme/directory
+
+###
+GET https://acme.zerossl.com/v2/DV90
+
+###
+GET https://acme.ssl.com/sslcom-dv-ecc
+
+###
+HEAD https://acme-v02.api.letsencrypt.org/acme/new-nonce
+
+# Next
+###
+GET https://acme-staging-v02.api.letsencrypt.org/directory
+
+###
+HEAD https://acme-staging-v02.api.letsencrypt.org/acme/new-nonce
+
+###
+POST https://acme-staging-v02.api.letsencrypt.org/acme/new-acct
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAyRjV3SlIxeFBDQURaNzFOdkhSMng2ZHNEdTFNTXIteDROM3VPNThXcjZibyIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9uZXctYWNjdCIsICJqd2siOiB7InkiOiAiRXdWSjBsOThVdG1tY1MtdjloeE5iNG5LbDJuZ1FFM1ZrNXA5dTFMRUllbyIsICJ4IjogIllabWF3TXhrdFdXU2U3OFNUZ3p3dnp0UjN5WkhSUTJSRXpPS3dEMVgxUm8iLCAiY3J2IjogIlAtMjU2IiwgImt0eSI6ICJFQyJ9LCAiYWxnIjogIkVTMjU2In0",
+    "payload": "eyJ0ZXJtc09mU2VydmljZUFncmVlZCI6IHRydWV9",
+    "signature": "p2t72ttpu1to-MktP9LT4l4jhW5JiECM1tuIE4E0UtXpfXBNKs6znF_8tcQMFNg9En7w4vQoo8AjQnu0Rj5hyw"
+}
+
+###
+POST https://acme-staging-v02.api.letsencrypt.org/acme/new-order
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAyQlVWMGpLY2pVQTAwQ2YycDNJeFpmSnZCbDYwZndRMDhvTWJjYnFpaXdCYyIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9uZXctb3JkZXIiLCAia2lkIjogImh0dHBzOi8vYWNtZS1zdGFnaW5nLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2FjbWUvYWNjdC8yMjk2NTExOCIsICJhbGciOiAiRVMyNTYifQ",
+    "payload": "eyJpZGVudGlmaWVycyI6IFt7InR5cGUiOiAiZG5zIiwgInZhbHVlIjogInQtZTEueGVvbnBoaS54eXoifV19",
+    "signature": "q20ke4PEY5g2HOf3SWv5abgZJd5uVIFgHwSc4A6wtT5RGD6UVZatbIKn0iYEBjEHRIAHXY6wKfjfEjExlNdpyQ"
+}
+
+###
+POST https://acme-staging-v02.api.letsencrypt.org/acme/authz-v3/250140208
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAxMGQ4NXZIZ0UxYXQwMDBRamstQkVvdlY3cFNrdENzOE5sTUZoSS1sNlhJUSIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9hdXRoei12My8yNTAxNDAyMDgiLCAia2lkIjogImh0dHBzOi8vYWNtZS1zdGFnaW5nLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2FjbWUvYWNjdC8yMjk2NTExOCIsICJhbGciOiAiRVMyNTYifQ",
+    "payload": "",
+    "signature": "r5PU3oBPal3FxMOqBvWBgDyKXy7UJwSnPsMPP-MSFhBmeMzJiE53xrN0ge3TeImjwlzBZpjOLSkBZweV5_KXgw"
+}
+
+### Fuck POST-as-GET!!!!
+POST https://acme-staging-v02.api.letsencrypt.org/acme/chall-v3/242969138/Rg-Q6A
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAyUzVhX2pNbUxKQjIxY0RycFFzRGtJWGpnTnIzQnF3SDI5Zkt6Q0JrcUFnNCIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9jaGFsbC12My8yNDI5NjkxMzgvUmctUTZBIiwgImtpZCI6ICJodHRwczovL2FjbWUtc3RhZ2luZy12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMjI5NjUxMTgiLCAiYWxnIjogIkVTMjU2In0",
+    "payload": "e30",
+    "signature": "UjmQn3nO1pkkS5KijkgaSZTdDL-5cxaYYqKTOXz1xMmIa5aOCPMYVjXaiNRBSy7Y6vX7HvSuP8E0axuqe0_4Uw"
+}
+
+### Fuck POST-as-GET!!!!
+POST https://acme-staging-v02.api.letsencrypt.org/acme/chall-v3/242969138/Rg-Q6A
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAxTTRZcFBUdld1a09Ga0hTWkQ4enQyRUxKMkRPdnZwSEFkZkhXQjlIaVZ2USIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9jaGFsbC12My8yNDI5NjkxMzgvUmctUTZBIiwgImtpZCI6ICJodHRwczovL2FjbWUtc3RhZ2luZy12MDIuYXBpLmxldHNlbmNyeXB0Lm9yZy9hY21lL2FjY3QvMjI5NjUxMTgiLCAiYWxnIjogIkVTMjU2In0",
+    "payload": "",
+    "signature": "neoVtzWSmHij5X6Q5k5fYtSj6mOvEzWaQftjtpzY8RdtKdt8LqmuvvPI_IjguQlMy2VZ-nQFX5ksR7xZTzZiew"
+}
+
+###
+POST https://acme-staging-v02.api.letsencrypt.org/acme/finalize/22965118/269336538
+Content-Type: application/jose+json
+
+{
+  "protected": "eyJub25jZSI6ICIwMDAyZTVDX3BIMnp2TTRNZ2t4dFlFckRrYUEyMHRSaDhXbzJkRE5wSk95WEJDdyIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9maW5hbGl6ZS8yMjk2NTExOC8yNjkzMzY1MzgiLCAia2lkIjogImh0dHBzOi8vYWNtZS1zdGFnaW5nLXYwMi5hcGkubGV0c2VuY3J5cHQub3JnL2FjbWUvYWNjdC8yMjk2NTExOCIsICJhbGciOiAiRVMyNTYifQ",
+  "payload": "eyJjc3IiOiAiTUlIWk1JR0FBZ0VBTUI0eEhEQWFCZ05WQkFNTUUzUmxjM1F0WlRFdWVHVnZibkJvYVM1NGVYb3dXVEFUQmdjcWhrak9QUUlCQmdncWhrak9QUU1CQndOQ0FBUWc3UVB0NmdwUnE1UlJSVjR6b2E3OFQzVWVqcFU2am9BNnZMaU9rem1qbVZhMTV0QWZqWmFFQ250NVZMT09USTJ0VzBDVUpOcUNFTHFyNW43NGFPTWdvQUF3Q2dZSUtvWkl6ajBFQXdJRFNBQXdSUUlnV0o5V3JTMUYtQnFaTFNvR21uRFFYaWR4clJnci02Tk9OLU05alJrS1lyWUNJUUNjU0FMWkRhMmJuQV85cmdHOXRIS0hTdlJVdndPbnZ2dFQ1UWRWTkRRR3ZRIn0",
+  "signature": "twHwdVxgkp8Qi0VGUPYDieblAgbLvtKW8UnPbzt9OH8qks2LX2X07ZIRaAFs0P1jb-adl4wRfpocgwbZ2h3pBg"
+}
+
+###
+POST https://acme-staging-v02.api.letsencrypt.org/acme/cert/fa31027f9abd2bd9c8a1ccdcaf428cea5d86
+Content-Type: application/jose+json
+
+{
+    "protected": "eyJub25jZSI6ICIwMDAxMl83Zzc5UUYyTDFmV2JrTWFLNG16S0VCSzJTUXhYUEFJQWwwN05oQ2xBUSIsICJ1cmwiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9jZXJ0L2ZhMzEwMjdmOWFiZDJiZDljOGExY2NkY2FmNDI4Y2VhNWQ4NiIsICJraWQiOiAiaHR0cHM6Ly9hY21lLXN0YWdpbmctdjAyLmFwaS5sZXRzZW5jcnlwdC5vcmcvYWNtZS9hY2N0LzIyOTY1MTE4IiwgImFsZyI6ICJFUzI1NiJ9",
+    "payload": "",
+    "signature": "cvIOdnm_r3RsHS4Ek0qCPmY_kVlJqLIcpr-Hk-F6QDWm-auuf-T3jiMhuymQTvNgP8QPy1F3edw5R-t0w0_Clw"
+}

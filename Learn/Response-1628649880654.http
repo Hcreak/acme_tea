@@ -1,0 +1,16 @@
+HTTP/1.1 400 Bad Request
+Server: nginx
+Date: Wed, 11 Aug 2021 02:42:28 GMT
+Content-Type: application/problem+json
+Content-Length: 173
+Connection: close
+Boulder-Requester: 22965118
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-staging-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 0001YCxe4yw2mu5bzJb4lxvOvxUA6DV79bfi7usPLRsRnjU
+
+{
+  "type": "urn:ietf:params:acme:error:badNonce",
+  "detail": "JWS has an invalid anti-replay nonce: \"0002ATjo8s9gx1_Bldf6kCDEgK0ZLScRbzV-hJzi0fhuShk\"",
+  "status": 400
+}

@@ -1,0 +1,41 @@
+HTTP/1.1 200 OK
+Server: nginx
+Date: Wed, 11 Aug 2021 03:03:24 GMT
+Content-Type: application/json
+Content-Length: 818
+Connection: close
+Boulder-Requester: 22965118
+Cache-Control: public, max-age=0, no-cache
+Link: <https://acme-staging-v02.api.letsencrypt.org/directory>;rel="index"
+Replay-Nonce: 0002wPM84l0obBWQPbvJQ9JgJe-2_FIEB5AEik2pZnnWZcE
+X-Frame-Options: DENY
+Strict-Transport-Security: max-age=604800
+
+{
+  "identifier": {
+    "type": "dns",
+    "value": "test-e1.xeonphi.xyz"
+  },
+  "status": "pending",
+  "expires": "2021-08-18T02:39:59Z",
+  "challenges": [
+    {
+      "type": "http-01",
+      "status": "pending",
+      "url": "https://acme-staging-v02.api.letsencrypt.org/acme/chall-v3/242969138/NJLS3A",
+      "token": "te-ZRlTjIT0Op1_7hSvBZPVZcgMsCCXOv2wPifkVd8c"
+    },
+    {
+      "type": "dns-01",
+      "status": "pending",
+      "url": "https://acme-staging-v02.api.letsencrypt.org/acme/chall-v3/242969138/Rg-Q6A",
+      "token": "te-ZRlTjIT0Op1_7hSvBZPVZcgMsCCXOv2wPifkVd8c"
+    },
+    {
+      "type": "tls-alpn-01",
+      "status": "pending",
+      "url": "https://acme-staging-v02.api.letsencrypt.org/acme/chall-v3/242969138/AjoYQQ",
+      "token": "te-ZRlTjIT0Op1_7hSvBZPVZcgMsCCXOv2wPifkVd8c"
+    }
+  ]
+}
