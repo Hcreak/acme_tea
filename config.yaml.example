@@ -1,0 +1,39 @@
+dns01:
+- name: mycf
+  type: cloudflare
+  spec:
+    CF_Key: **************************
+    CF_Email: *******************
+
+notify:
+- name: mytg
+  type: telegram
+  spec:
+    TG_BOT_Token: **************************
+    TG_BOT_ChatID: ********
+
+order:
+- name: main
+  domains:
+  - "*.example.xyz"
+  - example.xyz
+  use_dns01: mycf
+  use_notify: mytg
+  deploy:
+  - name: nginx
+    copy-file:
+      key-path: /path/to/nginx/key.pem
+      cert-path: /path/to/nginx/cert.pem
+    command: ["nginx -s reload"]
+  - name: postfix
+    link-file:
+      key-path: /path/to/postfix/key.pem
+      cert-path: /path/to/postfix/cert.pem
+    command: ["systemctl restart postfix"]
+  - name: Remote_Server
+    command:
+    - scp {KEY-PATH} user@remote:/path/to/key.pem
+    - scp {CERT-PATH} user@remote:/path/to/cert.pem
+    - ssh user@remote -C "docker cp /path/to/cert.pem example:/path/to/server.crt"
+    - ssh user@remote -C "docker cp /path/to/key.pem example:/path/to/server.key"
+    - ssh user@remote -C "docker restart example"

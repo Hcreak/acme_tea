@@ -181,6 +181,14 @@ if __name__ == '__main__':
     # print dns01_txt("te-ZRlTjIT0Op1_7hSvBZPVZcgMsCCXOv2wPifkVd8c")
     # print chall_protected(), chall_payload_POST(), chall_signature_POST()
     # print finalize_protected(), finalize_payload('domain.csr'), finalize_signature()
-    print cert_protected(), cert_signature()
+    # print cert_protected(), cert_signature()
 
-     
+    protected = {
+        "nonce": nonce,
+        "url": "https://acme-staging-v02.api.letsencrypt.org/acme/acct/22965118",
+        "alg": "ES256",
+        "kid": "https://acme-staging-v02.api.letsencrypt.org/acme/acct/22965118"
+    }
+    protected64 = _b64(json.dumps(protected))
+    print protected64
+    print signature(protected64=protected64, payload64="", keyfile='account')

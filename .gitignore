@@ -1,3 +1,4 @@
 *.pyc
 Learn/account
 Learn/domain
+config.yaml
