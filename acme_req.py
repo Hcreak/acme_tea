@@ -62,11 +62,11 @@ class ACME_REQ:
 
     def req(self):
         content = {
-            "protected": self.protected64
-            "payload": self.payload64
+            "protected": self.protected64,
+            "payload": self.payload64,
             "signature": self.req_signature()
         }
-        r = requests.post(self.url, headers=["Content-Type":"application/jose+json"], data=json.dumps(content))
+        r = requests.post(self.url, headers={"Content-Type":"application/jose+json"}, data=json.dumps(content))
         # 无论是否成功都加入列表中 因为响应中都包含Replay-Nonce 同时也方便调试
         ACME_REQ.Forward_r_list.append(r)
         # 还有 201 Created
@@ -117,7 +117,8 @@ class ACME_REQ:
 
     @staticmethod
     def save_http_log():
-        filetime = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) 
+        filetime = time.strftime("%Y-%m-%d_%H-%M", time.localtime())
+        import os
         http_log_path = os.path.join(log_dir, filetime+'.http')
         with open(http_log_path,'w') as f:
             f.write(ACME_REQ.print_raw_res())

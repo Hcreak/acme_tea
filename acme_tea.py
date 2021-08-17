@@ -13,6 +13,6 @@ def Normal_Exit():
 
 if __name__ == '__main__':
     acme_init.init()
-    if sys.args[1] == '--only-init':
+    if sys.argv[1] == '--only-init':
         Normal_Exit()
 

@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from acme_util import acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data
+from acme_util import log_dir, result_dir, config_dir, acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data
 from acme_req import ACME_directory, ACME_Account
 import os
 import sys

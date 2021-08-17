@@ -58,7 +58,9 @@ def pem2jwk(keyfile=acct_key_path):
     jwk = {"crv": "P-256", "kty": "EC", "x": x64, "y": y64}
     return jwk
 
-def calc_thumbprint(jwk=acct_Data["jwk"]):
+def calc_thumbprint(jwk=None):
+    if not jwk:
+        jwk = acct_Data["jwk"]
     accountkey_json = json.dumps(jwk, sort_keys=True, separators=(',', ':'))
     thumbprint = _b64(hashlib.sha256(accountkey_json.encode('utf8')).digest())
     return thumbprint
