@@ -17,6 +17,7 @@ acct_dir = os.path.join(config_dir, 'acct')
 acct_key_path = os.path.join(acct_dir, 'account')
 acct_conf_path = os.path.join(acct_dir, 'acct.json')
 config_yaml_path = os.path.join(config_dir, 'config.yaml')
+dns01_plugin_dir = os.path.join(bin_dir, 'dns01')
 
 acct_Data = {}
 

@@ -25,7 +25,6 @@ if __name__ == '__main__':
         if sys.argv[1] == '--only-init':
             Normal_Exit()
 
-
         if sys.argv[1] == '--solo-order':
             solo = sys.argv[2]
         if '--no-cron' in sys.argv:

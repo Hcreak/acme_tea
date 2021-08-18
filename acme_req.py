@@ -6,7 +6,7 @@ from acme_util import _b64, acct_Data, signature, log_dir, add_kid_acct_Data
 import time
 import os
 
-RETRY_NUM = 5
+REQ_RETRY_NUM = 5
 
 directory_Data = {}
 
@@ -45,7 +45,6 @@ class ACME_REQ:
             self.payload64 = _b64(json.dumps(payload))
         else:
             self.payload64 = ""
-        self.build_protected()
 
         self.try_req()
         return self.stable_return()
@@ -68,6 +67,9 @@ class ACME_REQ:
         return signature(self.protected64,self.payload64)
 
     def req(self):
+        # Fix Bug: should get_nonce Every req
+        self.build_protected()
+
         content = {
             "protected": self.protected64,
             "payload": self.payload64,
@@ -84,7 +86,7 @@ class ACME_REQ:
             return True
 
     def try_req(self):
-        for i in range(RETRY_NUM):
+        for i in range(REQ_RETRY_NUM):
             if self.req():
                 return
             else:
@@ -95,9 +97,14 @@ class ACME_REQ:
         self.Exception_Exit()
 
     def stable_return(self):
-        data = {'url': self.r.headers.get('Location')}
-        data.update(self.r.json())
-        return data
+        # Fix Bug: some response Not json (e.g. ACME_Cert)
+        if self.r.headers["Content-Type"] == "application/json"
+            # some response Not have Location (headers.get return None)
+            data = {'url': self.r.headers.get('Location')}
+            data.update(self.r.json())
+            return data
+        else:
+            return self.r.content
 
     @staticmethod
     def print_raw_res():
@@ -183,18 +190,6 @@ class ACME_Order(ACME_REQ):
 class ACME_AuthZ(ACME_REQ):
     def __init__(self,mode=0,url):
         return ACME_REQ.__init__(self,url)
-
-
-class ACME_Chall(ACME_REQ):
-    def __init__(self,mode,url):
-        # Go Challenge
-        if mode:
-            payload = {}
-            return ACME_REQ.__init__(self,url,payload)
-
-        # verify statu
-        else:
-            return ACME_REQ.__init__(self,url)
 
 
 class ACME_Chall(ACME_REQ):
