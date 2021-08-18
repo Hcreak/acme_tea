@@ -4,6 +4,7 @@ import requests
 import json
 from acme_util import _b64, acct_Data, signature, log_dir, add_kid_acct_Data
 import time
+import os
 
 RETRY_NUM = 5
 
@@ -38,10 +39,16 @@ class ACME_REQ:
             r = requests.head(directory_Data["newNonce"])
         return r.headers.get('Replay-Nonce')
 
-    def __init__(self,url):
+    def __init__(self,url,payload=None):
         self.url = url
-        self.payload64 = ""
+        if payload:
+            self.payload64 = _b64(json.dumps(payload))
+        else:
+            self.payload64 = ""
         self.build_protected()
+
+        self.try_req()
+        return self.stable_return()
 
     def build_protected(self):
         protected = {
@@ -87,29 +94,33 @@ class ACME_REQ:
         print "Limit Retry Number upper, Exception Exit."
         self.Exception_Exit()
 
+    def stable_return(self):
+        data = {'url': self.r.headers.get('Location')}
+        data.update(self.r.json())
+        return data
+
     @staticmethod
     def print_raw_res():
         output = ""
         for r in ACME_REQ.Forward_r_list:
-            output += '''
-            ###
+        output += '''
+###
+{req.method} {req.url}
+{req_headers}
 
-            {req.method} {req.url}
-            {req_headers}
+{req.body}
 
-            {req.body}
+-------------------------------------------------
 
-            -------------------------------------------------
+{res.status_code} {res.reason}
+{res_headers}
 
-            {res.status_code} {res.reason}
-            {res_headers}
-
-            {res.text}
-
+{res.text}
             '''.format(
-                req=r.request, 
-                res=r, 
-                req_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()), 
+                req=r.request,
+                req_body=json.dumps(json.loads(r.request.body), indent=4, encoding='utf-8')
+                res=r,
+                req_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
                 res_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.headers.items())
             )
 
@@ -118,7 +129,6 @@ class ACME_REQ:
     @staticmethod
     def save_http_log():
         filetime = time.strftime("%Y-%m-%d_%H-%M", time.localtime())
-        import os
         http_log_path = os.path.join(log_dir, filetime+'.http')
         with open(http_log_path,'w') as f:
             f.write(ACME_REQ.print_raw_res())
@@ -134,22 +144,80 @@ class ACME_Account(ACME_REQ):
     def __init__(self,mode):
         if mode:
             url = directory_Data["newAccount"]
-            ACME_REQ.__init__(self,url)
-
             payload = {
                 "termsOfServiceAgreed": True
             }
-            self.payload64 = _b64(json.dumps(payload))
 
+            return ACME_REQ.__init__(self,url.payload)
+           
         # Not Used
         else:
             url = acct_Data["kid"]
-            ACME_REQ.__init__(self,url)
+            return ACME_REQ.__init__(self,url)
 
-        self.try_req()
-        if self.r.json()["status"] != "valid":
-            print "Current Account Statu Not Valid!"
-            self.Exception_Exit()
 
-        add_kid_acct_Data(self.r.headers.get('Location'))
+class ACME_Order(ACME_REQ):
+    def __init__(self,mode,domains=[],url=None):
+        if mode:
+            url = directory_Data["newOrder"]
 
+            payload = {
+                "identifiers": []
+            }
+
+            for d in domains:
+                payload["identifiers"].append(
+                    {
+                        "type": "dns",
+                        "value": d
+                    }
+                )
+
+            return ACME_REQ.__init__(self,url,payload)
+
+        # verify statu
+        else:
+            return ACME_REQ.__init__(self,url)
+
+
+class ACME_AuthZ(ACME_REQ):
+    def __init__(self,mode=0,url):
+        return ACME_REQ.__init__(self,url)
+
+
+class ACME_Chall(ACME_REQ):
+    def __init__(self,mode,url):
+        # Go Challenge
+        if mode:
+            payload = {}
+            return ACME_REQ.__init__(self,url,payload)
+
+        # verify statu
+        else:
+            return ACME_REQ.__init__(self,url)
+
+
+class ACME_Chall(ACME_REQ):
+    def __init__(self,mode,url):
+        # Go Challenge
+        if mode:
+            payload = {}
+            return ACME_REQ.__init__(self,url,payload)
+
+        # verify statu
+        else:
+            return ACME_REQ.__init__(self,url)
+
+
+class ACME_Finalize(ACME_REQ):
+    def __init__(self,mode=1,url,csrfile):
+        csr_der = _b64(os.popen("openssl req -in {} -outform DER".format(csrfile)).read())
+        payload = {
+            "csr": csr_der
+        }
+        return ACME_REQ.__init__(self,url,payload)
+
+
+class ACME_Cert(ACME_REQ):
+    def __init__(self,mode=0,url):
+        return ACME_REQ.__init__(self,url)

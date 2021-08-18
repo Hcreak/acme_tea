@@ -5,6 +5,7 @@ import json
 import os
 from binascii import a2b_hex
 import hashlib
+import yaml
 
 user_home = os.path.expanduser('~')
 project_dir = os.path.join(user_home, '.acme_tea')
@@ -15,6 +16,7 @@ config_dir = os.path.join(project_dir, 'conf')
 acct_dir = os.path.join(config_dir, 'acct')
 acct_key_path = os.path.join(acct_dir, 'account')
 acct_conf_path = os.path.join(acct_dir, 'acct.json')
+config_yaml_path = os.path.join(config_dir, 'config.yaml')
 
 acct_Data = {}
 
@@ -33,6 +35,20 @@ def add_kid_acct_Data(kid):
 def save_acct_Data():
     with open(acct_conf_path,'w') as f:
         json.dump(acct_Data, f)
+
+config_Data = {}
+
+def load_config_Data():
+    if not os.path.exists(config_yaml_path):
+        print "config.yaml Not Found"
+        return False
+    with open(config_yaml_path,'r') as f:
+        try:
+            config_Data = yaml.load(f.read())
+        except:
+            print "config.yaml Parse Failed, Format Error!"
+            return False
+    return True
 
 
 def _b64(content):
@@ -70,6 +86,11 @@ def signature(protected64,payload64,keyfile=acct_key_path):
     ec_r = os.popen("echo \"{}\" | head -n 2 | tail -n 1 | cut -d : -f 4 | tr -d \"\\r\\n\"".format(signedECText)).read()
     ec_s = os.popen("echo \"{}\" | head -n 3 | tail -n 1 | cut -d : -f 4 | tr -d \"\\r\\n\"".format(signedECText)).read()
     return _b64(a2b_hex(ec_r+ec_s))
+
+def dns01_txt(token):
+    keyauthorization = "{0}.{1}".format(token, acct_Data["thumbprint"])
+    txt = _b64(hashlib.sha256(keyauthorization).digest())
+    return txt
 
 # def debug_log():
 #     pass

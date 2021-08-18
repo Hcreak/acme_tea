@@ -1,7 +1,7 @@
 # coding=utf-8
 
-from acme_util import log_dir, result_dir, config_dir, acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data
-from acme_req import ACME_directory, ACME_Account
+from acme_util import acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data
+from acme_req import ACME_REQ, ACME_directory, ACME_Account
 import os
 import sys
 
@@ -35,15 +35,26 @@ def init():
 
     else:
         print "Need Init, Start Now"
-        os.mkdir(log_dir)
-        os.mkdir(result_dir)
-        os.mkdir(config_dir)
+
+        # 还是要移至setup
+        # os.mkdir(log_dir)
+        # os.mkdir(result_dir)
+        # os.mkdir(config_dir)
+
         os.mkdir(acct_dir)
         print "1. Generate Account Private Key"
         os.popen("openssl ecparam -name prime256v1 -genkey -out {}".format(acct_key_path))
         gen_acct_Data()
+
         print "2. Send newAccount Request"
-        ACME_Account(1)
+        result = ACME_Account(1)
+
+        if result["status"] != "valid":
+            print "Current Account Statu Not Valid!"
+            ACME_REQ.Exception_Exit()
+
+        add_kid_acct_Data(self.r.headers.get('Location'))
+
         print "3. Save Account Config Data"
         save_acct_Data()
         print "Init Done."
