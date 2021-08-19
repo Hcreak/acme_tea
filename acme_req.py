@@ -2,7 +2,7 @@
 
 import requests
 import json
-from acme_util import _b64, acct_Data, signature, log_dir, add_kid_acct_Data
+from acme_util import _b64, acct_auth_option, signature, log_dir
 import time
 import os
 
@@ -41,13 +41,13 @@ class ACME_REQ:
 
     def __init__(self,url,payload=None):
         self.url = url
-        if payload:
-            self.payload64 = _b64(json.dumps(payload))
-        else:
+        # Fuck!!! {} Empty Dict also as False
+        if payload == None:
             self.payload64 = ""
+        else:
+            self.payload64 = _b64(json.dumps(payload))
 
         self.try_req()
-        return self.stable_return()
 
     def build_protected(self):
         protected = {
@@ -55,11 +55,7 @@ class ACME_REQ:
             "url": self.url,
             "alg": "ES256"
         }
-
-        if acct_Data.has_key("kid"):
-            protected["kid"] = acct_Data["kid"]
-        else:
-            protected["jwk"] = acct_Data["jwk"]
+        protected.update(acct_auth_option())
 
         self.protected64 = _b64(json.dumps(protected))
 
@@ -99,7 +95,7 @@ class ACME_REQ:
 
     def stable_return(self):
         # Fix Bug: some response Not json (e.g. ACME_Cert)
-        if self.r.headers["Content-Type"] == "application/json"
+        if self.r.headers["Content-Type"] == "application/json":
             # some response Not have Location (headers.get return None)
             data = {'url': self.r.headers.get('Location')}
             data.update(self.r.json())
@@ -111,7 +107,7 @@ class ACME_REQ:
     def print_raw_res():
         output = ""
         for r in ACME_REQ.Forward_r_list:
-        output += '''
+            output += '''
 ###
 {req.method} {req.url}
 {req_headers}
@@ -126,7 +122,7 @@ class ACME_REQ:
 {res.text}
             '''.format(
                 req=r.request,
-                req_body=json.dumps(json.loads(r.request.body), indent=4, encoding='utf-8')
+                req_body=json.dumps(json.loads(r.request.body), indent=4, encoding='utf-8'),
                 res=r,
                 req_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
                 res_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.headers.items())
@@ -156,12 +152,12 @@ class ACME_Account(ACME_REQ):
                 "termsOfServiceAgreed": True
             }
 
-            return ACME_REQ.__init__(self,url.payload)
+            ACME_REQ.__init__(self,url,payload)
            
         # Not Used
-        else:
-            url = acct_Data["kid"]
-            return ACME_REQ.__init__(self,url)
+        # else:
+        #     url = acct_Data["kid"]
+        #     ACME_REQ.__init__(self,url)
 
 
 class ACME_Order(ACME_REQ):
@@ -181,16 +177,16 @@ class ACME_Order(ACME_REQ):
                     }
                 )
 
-            return ACME_REQ.__init__(self,url,payload)
+            ACME_REQ.__init__(self,url,payload)
 
         # verify statu
         else:
-            return ACME_REQ.__init__(self,url)
+            ACME_REQ.__init__(self,url)
 
 
 class ACME_AuthZ(ACME_REQ):
-    def __init__(self,mode=0,url):
-        return ACME_REQ.__init__(self,url)
+    def __init__(self,mode,url):  # mode only 0
+        ACME_REQ.__init__(self,url)
 
 
 class ACME_Chall(ACME_REQ):
@@ -198,22 +194,22 @@ class ACME_Chall(ACME_REQ):
         # Go Challenge
         if mode:
             payload = {}
-            return ACME_REQ.__init__(self,url,payload)
+            ACME_REQ.__init__(self,url,payload)
 
         # verify statu
         else:
-            return ACME_REQ.__init__(self,url)
+            ACME_REQ.__init__(self,url)
 
 
 class ACME_Finalize(ACME_REQ):
-    def __init__(self,mode=1,url,csrfile):
+    def __init__(self,mode,url,csrfile):  # mode only 1
         csr_der = _b64(os.popen("openssl req -in {} -outform DER".format(csrfile)).read())
         payload = {
             "csr": csr_der
         }
-        return ACME_REQ.__init__(self,url,payload)
+        ACME_REQ.__init__(self,url,payload)
 
 
 class ACME_Cert(ACME_REQ):
-    def __init__(self,mode=0,url):
-        return ACME_REQ.__init__(self,url)
+    def __init__(self,mode,url):  # mode only 0
+        ACME_REQ.__init__(self,url)

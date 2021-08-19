@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from acme_util import acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data
+from acme_util import acct_dir, acct_key_path, load_acct_Data, gen_acct_Data, save_acct_Data, add_kid_acct_Data
 from acme_req import ACME_REQ, ACME_directory, ACME_Account
 import os
 import sys
@@ -47,13 +47,14 @@ def init():
         gen_acct_Data()
 
         print "2. Send newAccount Request"
-        result = ACME_Account(1)
+        acct_obj = ACME_Account(1)
+        result = acct_obj.stable_return()
 
         if result["status"] != "valid":
             print "Current Account Statu Not Valid!"
             ACME_REQ.Exception_Exit()
 
-        add_kid_acct_Data(self.r.headers.get('Location'))
+        add_kid_acct_Data(result['url'])
 
         print "3. Save Account Config Data"
         save_acct_Data()

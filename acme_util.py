@@ -37,6 +37,13 @@ def save_acct_Data():
     with open(acct_conf_path,'w') as f:
         json.dump(acct_Data, f)
 
+# FUCK!!!FUCK!!!FUCK!!!
+def acct_auth_option():
+    if acct_Data.has_key("kid"):
+        return {"kid": acct_Data["kid"]}
+    else:
+        return {"jwk": acct_Data["jwk"]}
+
 config_Data = {}
 
 def load_config_Data():
@@ -45,11 +52,19 @@ def load_config_Data():
         return False
     with open(config_yaml_path,'r') as f:
         try:
+            global config_Data
             config_Data = yaml.load(f.read())
         except:
             print "config.yaml Parse Failed, Format Error!"
             return False
     return True
+
+# FUCK!!!FUCK!!!FUCK!!!
+def get_config_Data(item):
+    if config_Data.has_key(item):
+        return config_Data[item]
+    else:
+        return None
 
 
 def _b64(content):

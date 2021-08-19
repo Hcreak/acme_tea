@@ -21,7 +21,7 @@ if __name__ == '__main__':
     solo = None
     cron = True
 
-    if len(sys.argv) != 0:
+    if len(sys.argv) > 1:
         if sys.argv[1] == '--only-init':
             Normal_Exit()
 

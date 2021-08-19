@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from acme_util import config_Data, load_config_Data, dns01_txt, dns01_plugin_dir, result_dir
+from acme_util import load_config_Data, get_config_Data, dns01_txt, dns01_plugin_dir, result_dir
 from acme_req import ACME_REQ, ACME_Order, ACME_AuthZ, ACME_Chall, ACME_Finalize, ACME_Cert
 import os
 from importlib import import_module
@@ -9,7 +9,7 @@ import time
 VERIFY_RETRY_NUM = 5
 
 def find_dns01(name):
-    for dns01 in config_Data['dns01']:
+    for dns01 in get_config_Data('dns01'):
         if dns01['name'] == name:
             return dns01
     return None
@@ -57,7 +57,12 @@ def init_domain_key(domains,order_dir):
         alt += ",DNS:".join(domains)
         openssl_config += alt
 
-        os.popen("openssl req -new -sha256 -key {} -subj \"/\" -config <(printf \"{}\") > {}".format(key_path, openssl_config, csr_path))
+        # FUCK!!!FUCK!!!FUCK!!!
+        tmpfile_path = "/tmp/openssl.cnf"
+        with open(tmpfile_path, 'w') as f:
+            f.write(openssl_config)
+
+        os.popen("openssl req -new -sha256 -key {} -subj \"/\" -config {} > {}".format(key_path, tmpfile_path, csr_path))
     else:
         # single domain
         os.popen("openssl req -new -sha256 -key {} -subj \"/CN={}\" > {}".format(key_path, domains[0], csr_path))
@@ -68,7 +73,7 @@ def renew(solo=None,cron=True):
     if not load_config_Data():
         ACME_REQ.Exception_Exit()
     
-    for order in config_Data['order']:
+    for order in get_config_Data('order'):
         if not ( order.has_key('name') and order.has_key('domains') and order.has_key('use_dns01') ):
             print "Order Param Not Complete!"
             ACME_REQ.Exception_Exit()
@@ -79,51 +84,14 @@ def renew(solo=None,cron=True):
             ACME_REQ.Exception_Exit()
 
         print "Start Order -- {}".format(order['name'])
-        result = ACME_Order(1,domains=order['domains'])
-        order_url = result['url']
-        authz_url_list = result["authorizations"] # 注意这里是个挑战列表
+        order_obj = ACME_Order(1, domains=order['domains'])
+        result = order_obj.stable_return()
 
-        print "Authorization Count {}".format(len(authz_url_list))
-        for authz_url in authz_url_list:
-            print "Start Authorization {}".format(authz_url.split('/')[-1])
-            result = ACME_AuthZ(0,authz_url)
-            for chall in result["challenges"]:
-                if chall["type"] == "dns-01":
-                    chall_url = chall["url"]
-                    chall_token = chall["token"]
-            chall_domain = result["identifier"]["value"]
-
-            if not add_txt_record(dns01_conf,chall_domain,chall_token):
-                ACME_REQ.Exception_Exit()
-
-            print "Request Challenge."
-            ACME_Chall(1,chall_url)
-
-            for i in range(VERIFY_RETRY_NUM):
-                wait_second = 5*(1+i)
-                print "Wait {} second, Then verify Challenge".format(wait_second)
-                time.sleep(wait_second)
-
-                result = ACME_Chall(0,chall_url)
-                if result["status"] == "valid":
-                    break
-                elif result["status"] == "processing":
-                    continue
-                else:
-                    Unknow_Error()
-            # 一直processing跑出循环暂不考虑也不可能
-
-            print "Verify Authorization {}".format(authz_url.split('/')[-1])
-            result = ACME_AuthZ(0,authz_url)
-            if result["status"] != "valid":
-                Unknow_Error()
-
-            # 删除解析记录即使失败提示即可不必退出
-            rm_txt_record(dns01_conf,chall_domain)
-
-        print "Verify Order whether Ready"
-        result = ACME_Order(0,url=order_url)
-        if result["status"] != "ready":
+        if result["status"] == "pending":
+            normal_order(result)
+        elif result["status"] == "ready":  # 处理上次中断的订单
+            print "Order Ready Before :) Continue."
+        else:
             Unknow_Error()
         finalize_url = result["finalize"]
 
@@ -135,16 +103,69 @@ def renew(solo=None,cron=True):
             init_domain_key(order['domains'], order_dir)
 
         print "Complete Finalize, Submit CSR"
-        result = ACME_Finalize(1, finalize_url, os.path.join(order_dir, 'domain.csr'))
+        finalize_obj = ACME_Finalize(1, finalize_url, os.path.join(order_dir, 'domain.csr'))
+        result = finalize_obj.stable_return()
         if result["status"] != "valid":
             Unknow_Error()
         cert_url = result["certificate"]
 
         print "Receive Certificate And Save."
-        result = ACME_Cert(0,cert_url)
+        cert_obj = ACME_Cert(0,cert_url)
+        result = cert_obj.stable_return()
         fullchain_path = os.path.join(order_dir, 'fullchain.crt')
         with open(fullchain_path, 'w') as f:
             f.write(result)
 
         print "ACME Done."
-        
+
+
+def normal_order(result):
+    order_url = result['url']
+    authz_url_list = result["authorizations"] # 注意这里是个挑战列表
+
+    print "Authorization Count {}".format(len(authz_url_list))
+    for authz_url in authz_url_list:
+        print "Start Authorization {}".format(authz_url.split('/')[-1])
+        authz_obj = ACME_AuthZ(0,authz_url)
+        result = authz_obj.stable_return()
+        for chall in result["challenges"]:
+            if chall["type"] == "dns-01":
+                chall_url = chall["url"]
+                chall_token = chall["token"]
+        chall_domain = result["identifier"]["value"]
+
+        if not add_txt_record(dns01_conf,chall_domain,chall_token):
+            ACME_REQ.Exception_Exit()
+
+        print "Request Challenge."
+        ACME_Chall(1,chall_url)
+
+        for i in range(VERIFY_RETRY_NUM):
+            wait_second = 5*(1+i)
+            print "Wait {} second, Then verify Challenge".format(wait_second)
+            time.sleep(wait_second)
+
+            chall_obj = ACME_Chall(0,chall_url)
+            result = chall_obj.stable_return()
+            if result["status"] == "valid":
+                break
+            elif result["status"] == "processing":
+                continue
+            else:
+                Unknow_Error()
+        # 一直processing跑出循环暂不考虑也不可能
+
+        print "Verify Authorization {}".format(authz_url.split('/')[-1])
+        authz_obj = ACME_AuthZ(0,authz_url)
+        result = authz_obj.stable_return()
+        if result["status"] != "valid":
+            Unknow_Error()
+
+        # 删除解析记录即使失败提示即可不必退出
+        rm_txt_record(dns01_conf,chall_domain)
+
+    print "Verify Order whether Ready"
+    order_obj = ACME_Order(0, url=order_url)
+    result = order_obj.stable_return()
+    if result["status"] != "ready":
+        Unknow_Error()
