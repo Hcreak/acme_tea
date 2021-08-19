@@ -2,8 +2,8 @@ dns01:
 - name: mycf
   type: cloudflare
   spec:
-    CF_Key: **************************
-    CF_Email: *******************
+    CF_Token: ******************************
+    CF_Zone_ID: ******************************
 
 notify:
 - name: mytg
