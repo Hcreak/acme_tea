@@ -85,8 +85,7 @@ def cert_date_check(cert_path):
         return False
 
 
-def renew(solo=None,cron=True):
-    # solo & cron 还没有做
+def renew(solo=None,cron=False):
     if not load_config_Data():
         ACME_REQ.Exception_Exit()
     
@@ -94,6 +93,15 @@ def renew(solo=None,cron=True):
         if not ( order.has_key('name') and order.has_key('domains') and order.has_key('use_dns01') ):
             print "Order Param Not Complete!"
             ACME_REQ.Exception_Exit()
+
+        # solo option
+        if solo:
+            if order['name'] != solo:
+                continue
+        # cron option
+        if cron:
+            if order.has_key('no_cron') and order['no_cron']:
+                continue
 
         dns01_conf = find_dns01(order['use_dns01'])
         if not dns01_conf:
