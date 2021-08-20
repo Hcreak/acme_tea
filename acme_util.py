@@ -35,7 +35,7 @@ def add_kid_acct_Data(kid):
 
 def save_acct_Data():
     with open(acct_conf_path,'w') as f:
-        json.dump(acct_Data, f)
+        json.dump(acct_Data, f, indent=4, encoding='utf-8', sort_keys=True)
 
 # FUCK!!!FUCK!!!FUCK!!!
 def acct_auth_option():

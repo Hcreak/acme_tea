@@ -5,8 +5,10 @@ from acme_req import ACME_REQ, ACME_Order, ACME_AuthZ, ACME_Chall, ACME_Finalize
 import os
 from importlib import import_module
 import time
+import datetime
 
 VERIFY_RETRY_NUM = 5
+NEAR_EXPIRE_MIN = 6
 
 def find_dns01(name):
     for dns01 in get_config_Data('dns01'):
@@ -67,6 +69,19 @@ def init_domain_key(domains,order_dir):
         # single domain
         os.popen("openssl req -new -sha256 -key {} -subj \"/CN={}\" > {}".format(key_path, domains[0], csr_path))
 
+def cert_date_check(cert_path):
+    raw = os.popen("openssl x509 -in {} -noout -enddate".format(cert_path)).read()
+    raw_split = raw.split('=')[1].split()
+    maked = "{}-{}-{}".format(raw_split[-2], raw_split[0], raw_split[1])
+    expire = datetime.datetime.strptime(maked, "%Y-%b-%d")
+
+    today = datetime.datetime.today()
+    if expire > today:
+        delta = expire - today
+        return delta.days > NEAR_EXPIRE_MIN
+    else:  # expire long ago ....
+        return False
+
 
 def renew(solo=None,cron=True):
     # solo & cron 还没有做
@@ -83,6 +98,17 @@ def renew(solo=None,cron=True):
             print "Selected DNS-01 Config Not Exist!"
             ACME_REQ.Exception_Exit()
 
+        order_dir = os.path.join(result_dir, order['name'])
+        cert_path = os.path.join(order_dir, 'fullchain.crt')
+        csr_path = os.path.join(order_dir, 'domain.csr')
+
+        # PreCheck
+        if os.path.exists(cert_path):
+            if cert_date_check(cert_path):
+                print "Certificate Not near expire for Order [{}], Skip.".format(order['name'])
+                print "( If want to Force Update, Delete the specified directory in result )"
+                continue  # 跳过流程 继续执行下一订单
+
         print "Start Order -- {}".format(order['name'])
         order_obj = ACME_Order(1, domains=order['domains'])
         result = order_obj.stable_return()
@@ -95,15 +121,13 @@ def renew(solo=None,cron=True):
             Unknow_Error()
         finalize_url = result["finalize"]
 
-        # order_exist_check
-        order_dir = os.path.join(result_dir, order['name'])
-        if os.path.exists(order_dir):
-            print "Order is exist, Use last CSR."
+        if os.path.exists(csr_path):
+            print "Order is used, Use last CSR."
         else:
             init_domain_key(order['domains'], order_dir)
 
         print "Complete Finalize, Submit CSR"
-        finalize_obj = ACME_Finalize(1, finalize_url, os.path.join(order_dir, 'domain.csr'))
+        finalize_obj = ACME_Finalize(1, finalize_url, csr_path)
         result = finalize_obj.stable_return()
         if result["status"] != "valid":
             Unknow_Error()
@@ -112,7 +136,7 @@ def renew(solo=None,cron=True):
         print "Receive Certificate And Save."
         cert_obj = ACME_Cert(0,cert_url)
         result = cert_obj.stable_return()
-        fullchain_path = os.path.join(order_dir, 'fullchain.crt')
+        fullchain_path = cert_path
         with open(fullchain_path, 'w') as f:
             f.write(result)
 

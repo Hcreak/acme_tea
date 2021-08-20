@@ -134,8 +134,10 @@ class ACME_REQ:
     def save_http_log():
         filetime = time.strftime("%Y-%m-%d_%H-%M", time.localtime())
         http_log_path = os.path.join(log_dir, filetime+'.http')
-        with open(http_log_path,'w') as f:
-            f.write(ACME_REQ.print_raw_res())
+        write_content = ACME_REQ.print_raw_res()
+        if not write_content:
+            with open(http_log_path,'w') as f:
+                f.write(write_content)
 
     @staticmethod
     def Exception_Exit():

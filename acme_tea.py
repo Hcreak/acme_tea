@@ -3,8 +3,7 @@
 
 # acme_tea --only-init 只执行 newAccount
 # acme_tea --solo-order xxx 指定订单执行
-# acme_tea --no-cron 全部订单执行一次不做定时任务
-# acme_tea --solo-order xxx --no-cron 指定订单执行一次不做定时任务
+# acme_tea --cron 定时任务调用
 
 import sys
 import acme_init
@@ -19,7 +18,7 @@ if __name__ == '__main__':
     acme_init.init()
 
     solo = None
-    cron = True
+    cron = False
 
     if len(sys.argv) > 1:
         if sys.argv[1] == '--only-init':
@@ -27,7 +26,9 @@ if __name__ == '__main__':
 
         if sys.argv[1] == '--solo-order':
             solo = sys.argv[2]
-        if '--no-cron' in sys.argv:
-            cron = False
+ 
+        if sys.argv[1] == '--cron':
+            cron = True
     
     acme_renew.renew(solo,cron)
+    Normal_Exit()

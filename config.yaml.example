@@ -13,6 +13,16 @@ notify:
     TG_BOT_ChatID: ********
 
 order:
+- name: first
+  domains:
+  - test-a.example.xyz
+  - test-b.example.xyz
+  - test-c.example.xyz
+  use_dns01: mycf
+  no_cron: True
+  deploy:
+  - name: no_active
+
 - name: main
   domains:
   - "*.example.xyz"
