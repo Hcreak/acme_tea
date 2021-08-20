@@ -112,7 +112,7 @@ class ACME_REQ:
 {req.method} {req.url}
 {req_headers}
 
-{req.body}
+{req_body}
 
 -------------------------------------------------
 
@@ -122,7 +122,7 @@ class ACME_REQ:
 {res.text}
             '''.format(
                 req=r.request,
-                req_body=json.dumps(json.loads(r.request.body), indent=4, encoding='utf-8'),
+                req_body=json.dumps(json.loads(r.request.body), indent=2, encoding='utf-8'),
                 res=r,
                 req_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.request.headers.items()),
                 res_headers='\r\n'.join('{}: {}'.format(k, v) for k, v in r.headers.items())
@@ -135,7 +135,7 @@ class ACME_REQ:
         filetime = time.strftime("%Y-%m-%d_%H-%M", time.localtime())
         http_log_path = os.path.join(log_dir, filetime+'.http')
         write_content = ACME_REQ.print_raw_res()
-        if not write_content:
+        if write_content:
             with open(http_log_path,'w') as f:
                 f.write(write_content)
 

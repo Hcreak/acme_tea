@@ -4,6 +4,7 @@ import requests
 
 # 实测CF同一名称不同值的TXT记录视为多条TXT记录
 # 请求创建不同值的TXT记录不会报错 同样值才会报已存在
+# 实测 Let's Encrypt 不认可多条TXT记录 创建前必须检测清空!
 
 def _getid(api_param,name):
     url = "https://api.cloudflare.com/client/v4/zones/{}/dns_records?name={}&type=TXT".format(api_param['CF_Zone_ID'], name)
@@ -21,6 +22,8 @@ def _getid(api_param,name):
         return False
 
 def add(api_param, record):
+    rm(api_param, record) # 实测 Let's Encrypt 不认可多条TXT记录 创建前必须检测清空!
+
     url = "https://api.cloudflare.com/client/v4/zones/{}/dns_records".format(api_param['CF_Zone_ID'])
     auth = {"Authorization": "Bearer {}".format(api_param['CF_Token'])}
     body = {

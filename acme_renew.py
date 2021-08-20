@@ -7,8 +7,10 @@ from importlib import import_module
 import time
 import datetime
 
-VERIFY_RETRY_NUM = 5
+# VERIFY_RETRY_NUM = 5
+CHALLENGE_DELAY = 60
 NEAR_EXPIRE_MIN = 6
+DEPLOY_DEFAULT_TIMEOUT = 10
 
 def find_dns01(name):
     for dns01 in get_config_Data('dns01'):
@@ -100,8 +102,6 @@ def renew(solo=None,cron=True):
 
         order_dir = os.path.join(result_dir, order['name'])
         cert_path = os.path.join(order_dir, 'fullchain.crt')
-        csr_path = os.path.join(order_dir, 'domain.csr')
-
         # PreCheck
         if os.path.exists(cert_path):
             if cert_date_check(cert_path):
@@ -114,13 +114,14 @@ def renew(solo=None,cron=True):
         result = order_obj.stable_return()
 
         if result["status"] == "pending":
-            normal_order(result)
+            normal_order(result, dns01_conf)
         elif result["status"] == "ready":  # 处理上次中断的订单
             print "Order Ready Before :) Continue."
         else:
             Unknow_Error()
         finalize_url = result["finalize"]
 
+        csr_path = os.path.join(order_dir, 'domain.csr')
         if os.path.exists(csr_path):
             print "Order is used, Use last CSR."
         else:
@@ -142,8 +143,12 @@ def renew(solo=None,cron=True):
 
         print "ACME Done."
 
+        if order.has_key('deploy'):
+            key_path = os.path.join(order_dir, 'domain')
+            deploy_process(order['deploy'], key_path, cert_path)
 
-def normal_order(result):
+
+def normal_order(result,dns01_conf):
     order_url = result['url']
     authz_url_list = result["authorizations"] # 注意这里是个挑战列表
 
@@ -161,23 +166,31 @@ def normal_order(result):
         if not add_txt_record(dns01_conf,chall_domain,chall_token):
             ACME_REQ.Exception_Exit()
 
-        print "Request Challenge."
+        print "Wait {} second, Then Request Challenge".format(CHALLENGE_DELAY)
+        time.sleep(CHALLENGE_DELAY)
         ACME_Chall(1,chall_url)
 
-        for i in range(VERIFY_RETRY_NUM):
-            wait_second = 5*(1+i)
-            print "Wait {} second, Then verify Challenge".format(wait_second)
-            time.sleep(wait_second)
+        # Fuck Let's Encrypt!!!!
+        # 实测 Let's Encrypt 挑战失败直接invalid 导致整个订单invalid 没有意义
+        # for i in range(VERIFY_RETRY_NUM):
+        #     wait_second = 5*(1+i)
+        #     print "Wait {} second, Then verify Challenge".format(wait_second)
+        #     time.sleep(wait_second)
 
-            chall_obj = ACME_Chall(0,chall_url)
-            result = chall_obj.stable_return()
-            if result["status"] == "valid":
-                break
-            elif result["status"] == "processing":
-                continue
-            else:
-                Unknow_Error()
-        # 一直processing跑出循环暂不考虑也不可能
+        #     chall_obj = ACME_Chall(0,chall_url)
+        #     result = chall_obj.stable_return()
+        #     if result["status"] == "valid":
+        #         break
+        #     elif result["status"] == "processing":
+        #         continue
+        #     else:
+        #         Unknow_Error()
+
+        print "Verify Challenge."
+        chall_obj = ACME_Chall(0,chall_url)
+        result = chall_obj.stable_return()
+        if result["status"] != "valid":
+            Unknow_Error()
 
         print "Verify Authorization {}".format(authz_url.split('/')[-1])
         authz_obj = ACME_AuthZ(0,authz_url)
@@ -193,3 +206,20 @@ def normal_order(result):
     result = order_obj.stable_return()
     if result["status"] != "ready":
         Unknow_Error()
+
+def deploy_process(deploy_list,key_path,cert_path):
+    for deploy in deploy_list:
+        if deploy.has_key('copy-file'):
+            target = deploy['copy-file']
+            os.popen("/bin/cp -f {} {}".format(key_path,target['key-path']))    # /bin/cp 防止 alias cp='cp -i' 干扰
+            os.popen("/bin/cp -f {} {}".format(cert_path,target['cert-path']))  # /bin/cp 防止 alias cp='cp -i' 干扰
+        if deploy.has_key('link-file'):
+            target = deploy['link-file']
+            os.popen("ln -sf {} {}".format(key_path,target['key-path']))
+            os.popen("ln -sf {} {}".format(cert_path,target['cert-path']))
+        if deploy.has_key('command'):
+            for command in deploy['command']:
+                command = command.replace("{KEY-PATH}", key_path)
+                command = command.replace("{CERT-PATH}", cert_path)
+                os.popen("timeout {} {}".format(DEPLOY_DEFAULT_TIMEOUT, command))  # 不接受执行结果 And 超时控制
+        print "deploy task [{}] End.".format(deploy['name'])
