@@ -18,6 +18,7 @@ acct_key_path = os.path.join(acct_dir, 'account')
 acct_conf_path = os.path.join(acct_dir, 'acct.json')
 config_yaml_path = os.path.join(config_dir, 'config.yaml')
 dns01_plugin_dir = os.path.join(bin_dir, 'dns01')
+notify_plugin_dir = os.path.join(bin_dir, 'notify')
 
 acct_Data = {}
 
@@ -108,5 +109,32 @@ def dns01_txt(token):
     txt = _b64(hashlib.sha256(keyauthorization).digest())
     return txt
 
-# def debug_log():
-#     pass
+def init_domain_key(domains,order_dir):
+    print "Generate New Domain Private Key & CSR"
+    os.mkdir(order_dir)
+    key_path = os.path.join(order_dir, 'domain')
+    csr_path = os.path.join(order_dir, 'domain.csr')
+    os.popen("openssl ecparam -name prime256v1 -genkey -out {}".format(key_path))
+
+    if len(domains) > 1:
+        # multi domains
+        # FUCK works with openssl < 1.1.1
+        openssl_config = "[ req_distinguished_name ]\n[ req ]\ndistinguished_name = req_distinguished_name\nreq_extensions = v3_req\n[ v3_req ]\n\n"
+        alt = "\nsubjectAltName=DNS:"
+        alt += ",DNS:".join(domains)
+        openssl_config += alt
+
+        # FUCK!!!FUCK!!!FUCK!!!
+        tmpfile_path = "/tmp/openssl.cnf"
+        with open(tmpfile_path, 'w') as f:
+            f.write(openssl_config)
+
+        os.popen("openssl req -new -sha256 -key {} -subj \"/\" -config {} > {}".format(key_path, tmpfile_path, csr_path))
+    else:
+        # single domain
+        os.popen("openssl req -new -sha256 -key {} -subj \"/CN={}\" > {}".format(key_path, domains[0], csr_path))
+
+def path_check(file_path):
+    dir_path = os.path.split(file_path)[0]
+    if not os.path.exists(dir_path):
+        os.popen("mkdir -p {}".format(dir_path))

@@ -14,8 +14,14 @@ def Normal_Exit():
     acme_req.ACME_REQ.save_http_log()
     sys.exit(0)
 
+def ERROR_Exit():
+    import acme_req
+    acme_req.ACME_REQ.save_http_log()
+    sys.exit(1)
+
 if __name__ == '__main__':
-    acme_init.init()
+    if not acme_init.init():
+        ERROR_Exit()
 
     solo = None
     cron = False
@@ -30,5 +36,6 @@ if __name__ == '__main__':
         if sys.argv[1] == '--cron':
             cron = True
     
-    acme_renew.renew(solo,cron)
+    if not acme_renew.renew(solo,cron):
+        ERROR_Exit()
     Normal_Exit()
