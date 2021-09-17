@@ -1,14 +1,14 @@
 #! /bin/bash
 
-pip install -r requirements.txt
+TEMP_DIR=/tmp/acme_tea
+
+pip install -r $TEMP_DIR/requirements.txt
 
 mkdir ~/.acme_tea
 mkdir ~/.acme_tea/bin
 mkdir ~/.acme_tea/log
 mkdir ~/.acme_tea/result
 mkdir ~/.acme_tea/conf
-
-TEMP_DIR=/tmp/acme_tea
 
 cp $TEMP_DIR/*.py ~/.acme_tea/bin/
 cp -R $TEMP_DIR/dns01 ~/.acme_tea/bin/

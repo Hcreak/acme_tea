@@ -7,6 +7,11 @@ Not applicable for all requirement, Special place:
    
    Now also need [Let's Encrypt ECDSA Allowlist Request Form](https://forms.gle/ftKeqkj6AJgXUDPJ8)
 
+## Auto Install
+```bash
+curl -Lso- https://raw.githubusercontent.com/Hcreak/acme_tea/master/auto.sh | bash
+```
+
 ## Reference
  * [acme.sh](https://github.com/acmesh-official/acme.sh)
  * [acme-tiny](https://github.com/diafygi/acme-tiny)
