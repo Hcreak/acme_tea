@@ -20,4 +20,4 @@ chmod +x ~/.acme_tea/bin/acme_tea.py
 source ~/.acme_tea/.env
 echo "source ~/.acme_tea/.env" >> ~/.bashrc
 
-( crontab -l ; echo "30 2 * * * acme_tea --cron" ) | crontab - 
+( crontab -l ; echo "30 2 * * * ~/.acme_tea/bin/acme_tea.py --cron" ) | crontab - 
