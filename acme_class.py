@@ -232,7 +232,10 @@ class Order():
             authz_obj = ACME_AuthZ(0,authz_url)
             result = authz_obj.stable_return()
             if result["status"] != "valid":
-                self.ERROR_EXIT()
+                if "error" in result:
+                    self.ERROR_EXIT("Challenge Error: " + result["error"]["detail"])
+                else:
+                    self.ERROR_EXIT()
                 return False
 
             # 删除解析记录即使失败提示即可不必退出
