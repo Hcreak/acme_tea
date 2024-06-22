@@ -18,11 +18,9 @@ def normal(api_param, order_info):
 ```
 {}
 ```
-*Expire* {}
     '''.format(
         _escape(order_info['name']),
-        _escape('\n'.join(order_info['domains'])),
-        _escape(str(order_info['expire']))
+        _escape('\n'.join(order_info['domains']))
     )
 
     payload = {'chat_id':api_param['TG_BOT_ChatID'], 'text':content, 'parse_mode':'Markdown'}

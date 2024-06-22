@@ -1,11 +1,11 @@
 # coding=utf-8
 
-from acme_util import dns01_plugin_dir, dns01_txt, notify_plugin_dir, init_domain_key, result_dir, path_check
-from acme_req import ACME_Order, ACME_AuthZ, ACME_Chall, ACME_Finalize, ACME_Cert
+from acme_util import dns01_plugin_dir, dns01_txt, notify_plugin_dir, init_domain_key, result_dir, path_check, get_ARI_CertID
+from acme_req import ACME_Order, ACME_AuthZ, ACME_Chall, ACME_Finalize, ACME_Cert, ARI_Req
 import os
 from importlib import import_module
 import time
-import datetime
+from datetime import datetime
 
 class DNS01():
     def __init__(self,info):
@@ -70,7 +70,7 @@ class Notify():
 
 # VERIFY_RETRY_NUM = 5
 CHALLENGE_DELAY = 60
-NEAR_EXPIRE_MIN = 6
+# NEAR_EXPIRE_MIN = 6
 DEPLOY_DEFAULT_TIMEOUT = 10
 
 class Order():
@@ -112,21 +112,28 @@ class Order():
             self.notify_obj = notify_list[self.use_notify]
         return True
 
-    def _cert_date(self):
-        raw = os.popen("openssl x509 -in {} -noout -enddate".format(self.cert_path)).read()
-        raw_split = raw.split('=')[1].split()
-        maked = "{}-{}-{}".format(raw_split[-2], raw_split[0], raw_split[1])
-        expire = datetime.datetime.strptime(maked, "%Y-%b-%d")
-        return expire
+    # def _cert_date(self):
+    #     raw = os.popen("openssl x509 -in {} -noout -enddate".format(self.cert_path)).read()
+    #     raw_split = raw.split('=')[1].split()
+    #     maked = "{}-{}-{}".format(raw_split[-2], raw_split[0], raw_split[1])
+    #     expire = datetime.datetime.strptime(maked, "%Y-%b-%d")
+    #     return expire
 
-    def cert_date_check(self):
-        expire = self._cert_date()
-        today = datetime.datetime.today()
-        if expire > today:
-            delta = expire - today
-            return delta.days > NEAR_EXPIRE_MIN
-        else:  # expire long ago ....
-            return False
+    # def cert_date_check(self):
+    #     expire = self._cert_date()
+    #     today = datetime.datetime.today()
+    #     if expire > today:
+    #         delta = expire - today
+    #         return delta.days > NEAR_EXPIRE_MIN
+    #     else:  # expire long ago ....
+    #         return False
+
+    # https://letsencrypt.org/2024/04/25/guide-to-integrating-ari-into-existing-acme-clients#
+    def ARI_Check(self):
+        self.ARI_CertID = get_ARI_CertID(self.cert_path)
+        start, _end = ARI_Req(self.ARI_CertID)
+        start_datetime = datetime.strptime(start.split('.')[0], "%Y-%m-%dT%H:%M:%S")
+        return datetime.utcnow() < start_datetime
 
     def renew(self,cron=False):
         if cron and self.no_cron:
@@ -134,13 +141,15 @@ class Order():
 
         # PreCheck
         if os.path.exists(self.cert_path):
-            if self.cert_date_check():
-                print "Certificate Not near expire for Order [{}], Skip.".format(self.name)
+            if self.ARI_Check():
+                print "Certificate Not In ARI suggested Window for Order [{}], Skip.".format(self.name)
                 print "( If want to Force Update, Delete the specified directory in result )"
                 return True # 跳过流程 继续执行下一订单
-
-        print "Start Order -- {}".format(self.name)
-        order_obj = ACME_Order(1, domains=self.domains)
+            print "Start Order (Renew) -- {}".format(self.name)
+            order_obj = ACME_Order(1, domains=self.domains, replaces=self.ARI_CertID)
+        else:
+            print "Start Order -- {}".format(self.name)
+            order_obj = ACME_Order(1, domains=self.domains)
         result = order_obj.stable_return()
 
         if result["status"] == "pending":
@@ -174,7 +183,6 @@ class Order():
             f.write(result)
 
         print "ACME Done."
-        self.expire = self._cert_date()
         self.normal_notify()
 
         if self.deploy:

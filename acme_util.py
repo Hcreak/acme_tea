@@ -138,3 +138,10 @@ def path_check(file_path):
     dir_path = os.path.split(file_path)[0]
     if not os.path.exists(dir_path):
         os.popen("mkdir -p {}".format(dir_path))
+
+def get_ARI_CertID(cert_path):
+    AKI_raw = os.popen("openssl x509 -in {} -noout -ext authorityKeyIdentifier".format(cert_path)).read()
+    AKI_b64 = _b64(a2b_hex(AKI_raw.split('\n')[1].replace(' ','').replace(':','')))
+    Serial_raw = os.popen("openssl x509 -in {} -noout -serial".format(cert_path)).read()
+    Serial_b64 = _b64(a2b_hex(Serial_raw.split('\n')[0].replace('serial=','')))
+    return "{}.{}".format(AKI_b64, Serial_b64)

@@ -25,7 +25,15 @@ def ACME_directory(staging=False):
         directory_Data["newAccount"] = info["newAccount"]
         directory_Data["newNonce"] = info["newNonce"]
         directory_Data["newOrder"] = info["newOrder"]
+        directory_Data["renewalInfo"] = info["renewalInfo"]
         return True
+
+def ARI_Req(ARI_CertID):
+    r = requests.get(directory_Data["renewalInfo"] + '/' + ARI_CertID)
+    info = r.json()
+    if info.has_key("explanationURL"):
+        print "ARI WARN:\t" + info["explanationURL"]
+    return info["suggestedWindow"]["start"], info["suggestedWindow"]["end"]
 
 
 class ACME_REQ:
@@ -163,7 +171,7 @@ class ACME_Account(ACME_REQ):
 
 
 class ACME_Order(ACME_REQ):
-    def __init__(self,mode,domains=[],url=None):
+    def __init__(self,mode,domains=[],url=None, replaces=None):
         if mode:
             url = directory_Data["newOrder"]
 
@@ -178,6 +186,10 @@ class ACME_Order(ACME_REQ):
                         "value": d
                     }
                 )
+            
+            # ARI replaces option
+            if replaces:
+                payload["replaces"] = replaces
 
             ACME_REQ.__init__(self,url,payload)
 
