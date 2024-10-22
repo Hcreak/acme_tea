@@ -132,7 +132,7 @@ class Order():
     def ARI_Check(self):
         self.ARI_CertID = get_ARI_CertID(self.cert_path)
         start, _end = ARI_Req(self.ARI_CertID)
-        start_datetime = datetime.strptime(start.split('.')[0], "%Y-%m-%dT%H:%M:%S")
+        start_datetime = datetime.strptime(start.split('.')[0], "%Y-%m-%dT%H:%M:%SZ")
         return datetime.utcnow() < start_datetime
 
     def renew(self,cron=False):
