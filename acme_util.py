@@ -13,9 +13,14 @@ bin_dir = os.path.join(project_dir, 'bin')
 log_dir = os.path.join(project_dir, 'log')
 result_dir = os.path.join(project_dir, 'result')
 config_dir = os.path.join(project_dir, 'conf')
-acct_dir = os.path.join(config_dir, 'acct')
+
+if os.getenv("STAGING"):
+    acct_dir = os.path.join(config_dir, 'acct-staging')
+else:
+    acct_dir = os.path.join(config_dir, 'acct')
 acct_key_path = os.path.join(acct_dir, 'account')
 acct_conf_path = os.path.join(acct_dir, 'acct.json')
+
 config_yaml_path = os.path.join(config_dir, 'config.yaml')
 dns01_plugin_dir = os.path.join(bin_dir, 'dns01')
 notify_plugin_dir = os.path.join(bin_dir, 'notify')

@@ -170,14 +170,31 @@ class Order():
         print "Complete Finalize, Submit CSR"
         finalize_obj = ACME_Finalize(1, finalize_url, self.csr_path)
         result = finalize_obj.stable_return()
-        if result["status"] != "valid":
+        # FUCK Finalize processing!!!
+        while True:
+            if result["status"] == "processing":
+                time.sleep(10)
+                order_obj = ACME_Order(0, url=result['url'])
+                result = order_obj.stable_return()
+                continue
+            if result["status"] == "valid":
+                break
+            # Other Status
             self.ERROR_EXIT()
             return False
         cert_url = result["certificate"]
 
         print "Receive Certificate And Save."
         cert_obj = ACME_Cert(0,cert_url)
-        result = cert_obj.stable_return()
+        fullchain_list = [ cert_obj.stable_return() ]
+        fullchain_list += cert_obj.get_alternate_fullchains()
+        for i in fullchain_list:
+            ca_cert = i.split('\n\n')[-1]
+            issuer = os.popen("echo '{}' | openssl x509 -noout -issuer".format(ca_cert)).read()
+            if "ISRG Root X2" in issuer or "Bogus Broccoli X2" in issuer:
+                result = i
+                break
+        
         fullchain_path = self.cert_path
         with open(fullchain_path, 'w') as f:
             f.write(result)

@@ -24,8 +24,7 @@ def init():
     if not openssl_check():
         sys.exit(1)
 
-    if not ACME_directory(staging=True):
-    # if not ACME_directory():
+    if not ACME_directory():
         print "ACME Service Unavailable"
         sys.exit(1)
 

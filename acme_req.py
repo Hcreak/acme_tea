@@ -10,8 +10,8 @@ REQ_RETRY_NUM = 5
 
 directory_Data = {}
 
-def ACME_directory(staging=False):
-    if staging:
+def ACME_directory():
+    if os.getenv("STAGING"):
         directory_url = "https://acme-staging-v02.api.letsencrypt.org/directory"
     else:
         # This is Production
@@ -227,3 +227,15 @@ class ACME_Finalize(ACME_REQ):
 class ACME_Cert(ACME_REQ):
     def __init__(self,mode,url):  # mode only 0
         ACME_REQ.__init__(self,url)
+    
+    def get_alternate_fullchains(self):
+        # Can't use response.links directly because it drops multiple links
+        # of the same relation type, which is possible in RFC8555 responses.
+        links = requests.utils.parse_header_links(self.r.headers['Link'])
+
+        alternate_urls = [l['url'] for l in links if l['rel'] == 'alternate']
+        alternate_certs = []
+        for i in alternate_urls:
+            r = requests.get(i)
+            alternate_certs.append(r.content)
+        return alternate_certs
